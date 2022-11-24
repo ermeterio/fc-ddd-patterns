@@ -59,15 +59,11 @@ export default class OrderRepository implements OrderRepositoryInterface {
                 orderItemModel.map((orderItem) => new OrderItem(orderItem.id, orderItem.name, orderItem.price, orderItem.product_id, orderItem.quantity)));
   }
 
-  async findAll(): Promise<Order[]> {
-    const orderModels = await OrderModel.findAll();
-    const { Op } = require("sequelize");
-    let idsOrders = new Array<string>();
-    idsOrders  = orderModels.map((ids) => ids.id);
-    const orderItemModel = await OrderItemModel.findAll( { where : { order_id : {[Op.in] : idsOrders } } } );
+  async findAll(): Promise<Order[]> {    
+    let orderModels = await OrderModel.findAll({include: ["items"]});
     return orderModels.map((orderModel) =>      
       new Order(orderModel.id, orderModel.customer_id,        
-        orderItemModel. map( (orderItem) => new OrderItem(orderItem.id, orderItem.name, orderItem.price, orderItem.product_id, orderItem.quantity), { where: { order_id : orderModel.id }}))
+        orderModel.items. map( (orderItem) => new OrderItem(orderItem.id, orderItem.name, orderItem.price, orderItem.product_id, orderItem.quantity), { where: { order_id : orderModel.id }}))
     );
   }
 

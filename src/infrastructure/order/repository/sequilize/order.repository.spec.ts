@@ -18,7 +18,7 @@ describe("Order repository test", () => {
   beforeEach(async () => {
     sequelize = new Sequelize({
       dialect: "sqlite",
-      storage: ":memory:",
+      storage: ":memory:",      
       logging: false,
       sync: { force: true },
     });
@@ -60,26 +60,24 @@ describe("Order repository test", () => {
     const orderRepository = new OrderRepository();
     await orderRepository.create(order);
 
-    const orderModel = await OrderModel.findOne({
-      where: { id: order.id },
-      include: ["items"],
-    });
+    const orderModel = await orderRepository.find(order.id);
 
-    expect(orderModel.toJSON()).toStrictEqual({
-      id: "123",
-      customer_id: "123",
-      total: order.total(),
-      items: [
+    const test = JSON.stringify({
+      _id: "123",
+      _customerId: "123",      
+      _items: [
         {
-          id: ordemItem.id,
-          name: ordemItem.name,
-          price: ordemItem.price,
-          quantity: ordemItem.quantity,
-          order_id: "123",
-          product_id: "123",
+          _id: ordemItem.id,
+          _name: ordemItem.name,
+          _price: ordemItem.price,
+          _productId: "123",
+          _quantity: ordemItem.quantity,          
         },
       ],
-    });
+      _total: order.total(),
+    })
+
+    expect(JSON.stringify(orderModel)).toStrictEqual(test);
   });
 
   it("should find a order", async () => {
@@ -101,31 +99,28 @@ describe("Order repository test", () => {
       2
     );
 
-    var order = new Order("123", "123", [ordemItem]);
-    var orderRepository = new OrderRepository();
+    const order = new Order("123", "123", [ordemItem]);
+    const orderRepository = new OrderRepository();
     await orderRepository.create(order);
 
-    const orderModel = await OrderModel.findOne({
-      where: { id: order.id },
-      include: ["items"],
-    });
-
-    expect(orderModel.toJSON()).toStrictEqual({
-      id: "123",
-      customer_id: "123",
-      total: order.total(),
-      items: [
+    const orderModel = await orderRepository.find(order.id);
+        
+    const test = JSON.stringify({
+      _id: "123",
+      _customerId: "123",      
+      _items: [
         {
-          id: ordemItem.id,
-          name: ordemItem.name,
-          price: ordemItem.price,
-          quantity: ordemItem.quantity,
-          order_id: "123",
-          product_id: "123",
+          _id: ordemItem.id,
+          _name: ordemItem.name,
+          _price: ordemItem.price,
+          _productId: "123",
+          _quantity: ordemItem.quantity,          
         },
       ],
-    });
+      _total: order.total(),
+    })
 
+    expect(JSON.stringify(orderModel)).toStrictEqual(test);
   });
 
   it("should find all orders", async () => {
@@ -141,7 +136,7 @@ describe("Order repository test", () => {
     await productRepository.create(product);
     await productRepository.create(product_2);
 
-    var ordemItem1 = new OrderItem(
+    const ordemItem1 = new OrderItem(
       "1",
       product.name,
       product.price,
@@ -149,8 +144,8 @@ describe("Order repository test", () => {
       2
     );
 
-    var order = new Order("1", "1", [ordemItem1]);
-    var orderRepository = new OrderRepository();
+    const order = new Order("1", "1", [ordemItem1]);
+    const orderRepository = new OrderRepository();
     await orderRepository.create(order);
 
     var ordemItem2 = new OrderItem(
@@ -161,43 +156,41 @@ describe("Order repository test", () => {
       2
     );
 
-    var order2 = new Order("2", "1", [ordemItem2]);
+    const order2 = new Order("2", "1", [ordemItem2]);
     await orderRepository.create(order2);
 
-    const orderModels = await OrderModel.findAll({include: ["items"]});
+    const orderModels = await orderRepository.findAll();
 
-    let test = JSON.stringify([{   
-      id: "1",     
-      customer_id: "1",        
-      total: order.total(),
-      items: [
+    const test = JSON.stringify([{   
+      _id: "1",     
+      _customerId: "1", 
+      _items: [
         {
-          id: "1",
-          product_id: "1",
-          order_id: "1",
-          quantity: ordemItem1.quantity,
-          name: ordemItem1.name,
-          price: ordemItem1.price,
+          _id: "1",
+          _name: ordemItem1.name,
+          _price: ordemItem1.price,          
+          _productId: "1",
+          _quantity: ordemItem1.quantity,          
         },
-      ]},{
-        id: "2",       
-        customer_id: "1",             
-        total: order2.total(),
-        items: [
+      ],
+      _total: order.total(),},
+      {
+        _id: "2",       
+        _customerId: "1",   
+        _items: [
           {
-            id: "2",
-            product_id: "2",
-            order_id: "2",
-            quantity: ordemItem2.quantity,
-            name: ordemItem2.name,
-            price: ordemItem2.price,
+            _id: "2",
+            _name: ordemItem2.name,
+            _price: ordemItem2.price,           
+            _productId: "2",
+            _quantity: ordemItem2.quantity,            
           },
-        ]
+        ],
+        _total: order2.total(),
       }]);
      
     expect(JSON.stringify(orderModels)).toStrictEqual(test);
   });
-
 
   it("should update a existing order", async () => {
     const customerRepository = new CustomerRepository();
@@ -217,8 +210,9 @@ describe("Order repository test", () => {
       product.id,
       2
     );
+
     var order = new Order("123", "123", [ordemItem]);
-    var orderRepository = new OrderRepository();
+    const orderRepository = new OrderRepository();
     await orderRepository.create(order);
 
     const newProduct = new Product("321", "Product 2", 100);
@@ -231,30 +225,30 @@ describe("Order repository test", () => {
       newProduct.id,
       2
     );
+
     order = new Order("123", "123", [newOrdemItem]);
+
     await orderRepository.update(order);
 
-    const orderModel = await OrderModel.findOne({
-      where: { id: order.id },
-      include: ["items"],
-    });
+    const orderModel = await orderRepository.find(order.id);
 
     var test = JSON.stringify({
-      id: "123",
-      customer_id: "123",
-      total: order.total(),
-      items: [
+      _id: "123",
+      _customerId: "123",     
+      _items: [
         {
-          id: newOrdemItem.id,
-          product_id: "321",
-          order_id: "123",
-          quantity: newOrdemItem.quantity,
-          name: newOrdemItem.name,
-          price: newOrdemItem.price,          
+          _id: newOrdemItem.id,
+          _name: newOrdemItem.name,
+          _price: newOrdemItem.price,         
+          _productId: "321",
+          _quantity: newOrdemItem.quantity,           
         },
       ],
-    });    
+      _total: order.total(),
+    });
+    
     expect(JSON.stringify(orderModel)).toStrictEqual(test);
 
   });
-});
+
+  });
